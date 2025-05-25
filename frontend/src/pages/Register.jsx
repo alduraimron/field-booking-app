@@ -1,40 +1,104 @@
-import React from 'react'
 import { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-function Register(){
-    const [state, setState] = useState({
-        password : "", 
-        showPassword : false, 
-        confirmPassword : "", 
-        showConfirmPassword : false}
-    );
-    const password = state.password
-    const showPassword = state.showPassword
-    const confirmPassword = state.confirmPassword
-    const showConfirmPassword = state.showConfirmPassword
+//TODO: handle error message kalau ada waktu
+function Register() {
+    const navigate = useNavigate();
+    // state input
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    //state show password
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    function setPasswordChange(newPassword){
-        setState(prevState => {
-            return {...prevState, password : newPassword}
-        })
-    }
+    // State untuk feedback ke pengguna (misalnya, pesan sukses/error)
+    const [message, setMessage] = useState('');
+    const [isError, setIsError] = useState(false);
+    const [loading, setLoading] = useState(false); // Untuk indikator loading
+    // fungsi yang menghandle submit form
+    const handleSubmit = async (event) => {
+        event.preventDefault();
 
-    function setShowPassword(){
-        setState(prevState => {
-            return {...prevState, showPassword : !prevState.showPassword}
-        })
-    }
+        setMessage('');
+        setIsError(false);
 
-    function setConfirmPasswordChange(newConfirmPassword){
-        setState(prevState => {
-            return {...prevState, confirmPassword : newConfirmPassword}
-        })
-    }
+        //validasi state
+        if (password !== confirmPassword) {
+            setMessage('Password dan Konfirmasi Password tidak cocok!');
+            setIsError(true);
+            return;
+        }
+        if (!username || !email || !password || !confirmPassword) {
+            setMessage('Semua field harus diisi!');
+            setIsError(true);
+            return;
+        }
+        //TODO:ganti url jadi dari .env
+        try {
+            const response = await axios.post('http://localhost:8000/api/register', {
+                name,
+                email,
+                password,
+                password_confirmation: confirmPassword,
+            });
 
-    function setShowConfirmPassword(){
-        setState(prevState => {
-            return {...prevState, showConfirmPassword : !prevState.showConfirmPassword}
-        })
+
+            // Jika registrasi sukses
+            if (response.status === 201 || response.status === 200) {
+                //simpan token sanctum
+                const token = response.data.token;
+                if (token) {
+                    sessionStorage.setItem('sanctumToken', token);
+                    setMessage('Login berhasil!');
+                    setIsError(false);
+                } else {
+                    setMessage('Token tidak ditemukan dalam respons.');
+                    setIsError(true);
+                }
+
+                setMessage('Registrasi berhasil! Silakan login.');
+                setIsError(false);
+                // Opsional: reset form setelah sukses
+                setUsername('');
+                setEmail('');
+                setPassword('');
+                setConfirmPassword('');
+
+                navigate('/');
+                // Opsional: redirect pengguna ke halaman login
+                // history.push('/login'); // Jika Anda menggunakan React Router
+            } else {
+                // Ini akan tertangkap oleh catch jika status bukan 2xx
+                // Namun, ini sebagai fallback
+                setMessage('Registrasi gagal. Silakan coba lagi.');
+                setIsError(true);
+            }
+        } catch (error) {
+            setIsError(true);
+            if (error.response) {
+                console.error('Error response:', error.response.data);
+                console.error('Error status:', error.response.status);
+                if (error.response.data.message) {
+                    setMessage(`Registrasi gagal: ${error.response.data.message}`);
+                } else if (error.response.data.errors) {
+                    // Jika API mengembalikan error validasi (misal Laravel)
+                    const errorMessages = Object.values(error.response.data.errors).flat();
+                    setMessage(`Registrasi gagal: ${errorMessages.join(', ')}`);
+                } else {
+                    setMessage('Terjadi kesalahan saat registrasi.');
+                }
+            } else if (error.request) {
+                console.error('Error request:', error.request);
+                setMessage('Tidak ada respons dari server. Pastikan server berjalan.');
+            } else {
+                // Kesalahan lain
+                console.error('Error message:', error.message);
+                setMessage('Terjadi kesalahan tak terduga.');
+            }
+        };
     }
 
     return (
@@ -77,7 +141,7 @@ function Register(){
                             </p>
                         </div> */}
                         {/* Register Form */}
-                        <form className="space-y-4">
+                        <form className="space-y-4" onSubmit={handleSubmit}>
                             {/* Nama Field */}
                             <div>
                                 <label className="block text-white text-sm font-medium mb-2">
@@ -85,9 +149,11 @@ function Register(){
                                 </label>
                                 <input
                                     type="name"
-                                    defaultValue=""
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
                                     className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-gray-800"
                                     placeholder="Enter your name"
+                                    required
                                 />
                             </div>
                             {/* Email Field */}
@@ -97,9 +163,11 @@ function Register(){
                                 </label>
                                 <input
                                     type="email"
-                                    defaultValue=""
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
                                     className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-gray-800"
                                     placeholder="Enter your email"
+                                    required
                                 />
                             </div>
                             {/* Password Field */}
@@ -111,13 +179,14 @@ function Register(){
                                     <input
                                         type={showPassword ? "text" : "password"}
                                         value={password}
-                                        onChange={(e) => setPasswordChange(e.target.value)}
+                                        onChange={(e) => setPassword(e.target.value)}
                                         className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-gray-800 pr-12"
                                         placeholder="Confirm your password"
+                                        required
                                     />
                                     <button
                                         type="button"
-                                        onClick={setShowPassword}
+                                        onClick={() => setShowPassword(!showPassword)}
                                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                                     >
                                         <svg
@@ -151,13 +220,14 @@ function Register(){
                                     <input
                                         type={showConfirmPassword ? "text" : "password"}
                                         value={confirmPassword}
-                                        onChange={(e) => setConfirmPasswordChange(e.target.value)}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
                                         className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-gray-800 pr-12"
                                         placeholder="Confirm your password"
+                                        required
                                     />
                                     <button
                                         type="button"
-                                        onClick={setShowConfirmPassword}
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                                     >
                                         <svg
@@ -205,6 +275,11 @@ function Register(){
                     </div>
                 </div>
             </div>
+            {message && (
+                <p className={isError ? 'error-message' : 'success-message'}>
+                    {message}
+                </p>
+            )}
         </>
 
     )

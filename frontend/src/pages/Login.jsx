@@ -1,6 +1,8 @@
+import axios from 'axios';
 import React, { useState } from 'react'
 
 function Login() {
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
 
@@ -11,6 +13,27 @@ function Login() {
     const toggleShowPassword = () => {
         setShowPassword(!showPassword);
     };
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        
+        try {
+            const response = await axios.post('http://localhost:8000/api/login', {
+                email,
+                password,
+            });
+            if (response.status === 201 || response.status === 200) {
+                if (token) {
+                    sessionStorage.setItem('sanctumToken', token);
+                }
+                setEmail('');
+                setPassword('');
+                navigate('/');
+            }
+        } catch (error) {
+            
+        }
+    }
 
     return (
         <>
@@ -53,7 +76,7 @@ function Login() {
                             </p>
                         </div>
                         {/* Login Form */}
-                        <form className="space-y-4">
+                        <form className="space-y-4" onSubmit={handleSubmit}>
                             {/* Email Field */}
                             <div>
                                 <label className="block text-white text-sm font-medium mb-2">
@@ -61,7 +84,8 @@ function Login() {
                                 </label>
                                 <input
                                     type="email"
-                                    defaultValue=""
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
                                     className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-gray-800"
                                     placeholder="Enter your email"
                                 />
