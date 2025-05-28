@@ -1,8 +1,9 @@
 import React from 'react'
 
-function TombolHari({hari, tanggal}) {
+function TombolHari({hari, tanggal, size}) {
+    const sizeClasses = size ? `min-w-${size} h-${size}` : 'min-w-15 h-15'
     return (
-        <div className='min-w-20 h-20'>
+        <div className={`${sizeClasses}`}>
             <a
                 href="#"
                 className='w-full h-full bg-red-800 rounded-[12px] text-white font-bold text-[15px] py-2 flex items-center justify-center text-center no-underline'

@@ -61,12 +61,12 @@ function Home() {
                       </h5>
                     </div>
                   </div>
-                  <div className='py-1.5 grow'>
-                    <button 
-                      className='w-full bg-red-800 rounded-[12px] hover:bg-red-900 active:bg-red-950 text-white font-bold text-[15px] py-2'
-                      type='button'>
+                  <div className='py-1.5 grow w-full'>
+                    <a 
+                      className='flex justify-center w-full  bg-red-800 rounded-[12px] hover:bg-red-900 active:bg-red-950 text-white font-bold text-[15px] py-2'
+                      href='/#pilih-lapangan'>
                       BOOK
-                    </button>
+                    </a>
                   </div>
                 </div>
               </div>
@@ -85,12 +85,12 @@ function Home() {
           </div>
         </div>
         <div className='w-full'>
-          <h1 className='mt-5 font-sans font-bold text-left text-3xl'>
+          <h1 className='mt-5 font-sans font-bold text-left text-3xl' id='pilih-lapangan'>
             Pilih Lapangan
           </h1>
         </div>
-        <div className='flex gap-4 justify-center mt-5 rounded-xl outline-hidden shadow-md p-3 h-fit'>
-          <div className='min-w-20 h-20'>
+        <div className='flex gap-4 justify-center mt-5 rounded-xl outline-hidden shadow-md p-3 h-fit w-fit justify-self-center'>
+          <div className='min-w-15 h-15'>
             <a href="">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-full h-full p-3">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
@@ -104,7 +104,7 @@ function Home() {
           <TombolHari hari="Kamis" tanggal="08 Mei"/>
           <TombolHari hari="Jum'at" tanggal="09 Mei"/>
           <TombolHari hari="Sabtu" tanggal="10 Mei"/>
-          <div className='w-20 h-20'>
+          <div className='w-15 h-15'>
             <a href="">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-full h-full p-3">
                 <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
