@@ -2,6 +2,7 @@ import React from 'react'
 import Navbar from '../components/Navbar'
 import Lapangan from '../components/Lapangan'
 import GarisLapangan from '../components/GarisLapangan'
+import TombolHari from '../components/TombolHari'
 
 function Home() {
   return (
@@ -96,111 +97,13 @@ function Home() {
               </svg>
             </a>
           </div>
-          <div className='min-w-20 h-20'>
-            <a
-              href="#"
-              className='w-full h-full bg-red-800 rounded-[12px] text-white font-bold text-[15px] py-2 flex items-center justify-center text-center no-underline'
-            >
-              <div className='flex-col gap-1 justify-center'>
-                <div>
-                  Minggu
-                </div>
-                <div className='text-[10px]'>
-                  04 Mei
-                </div>
-              </div>
-            </a>
-          </div>
-          <div className='w-20 h-20'>
-            <a
-              href="#"
-              className='w-full h-full bg-red-800 rounded-[12px] text-white font-bold text-[15px] py-2 flex items-center justify-center text-center no-underline'
-            >
-              <div className='flex-col gap-1 justify-center'>
-                <div>
-                  Senin
-                </div>
-                <div className='text-[10px]'>
-                  05 Mei
-                </div>
-              </div>
-            </a>
-          </div>
-          <div className='w-20 h-20'>
-            <a
-              href="#"
-              className='w-full h-full bg-red-800 rounded-[12px] text-white font-bold text-[15px] py-2 flex items-center justify-center text-center no-underline'
-            >
-              <div className='flex-col gap-1 justify-center'>
-                <div>
-                  Selasa
-                </div>
-                <div className='text-[10px]'>
-                  06 Mei
-                </div>
-              </div>
-            </a>
-          </div>
-          <div className='w-20 h-20'>
-            <a
-              href="#"
-              className='w-full h-full bg-red-800 rounded-[12px] text-white font-bold text-[15px] py-2 flex items-center justify-center text-center no-underline'
-            >
-              <div className='flex-col gap-1 justify-center'>
-                <div>
-                  Rabu
-                </div>
-                <div className='text-[10px]'>
-                  07 Mei
-                </div>
-              </div>
-            </a>
-          </div>
-          <div className='w-20 h-20'>
-            <a
-              href="#"
-              className='w-full h-full bg-red-800 rounded-[12px] text-white font-bold text-[15px] py-2 flex items-center justify-center text-center no-underline'
-            >
-              <div className='flex-col gap-1 justify-center'>
-                <div>
-                  Kamis
-                </div>
-                <div className='text-[10px]'>
-                  08 Mei
-                </div>
-              </div>
-            </a>
-          </div>
-          <div className='w-20 h-20'>
-            <a
-              href="#"
-              className='w-full h-full bg-red-800 rounded-[12px] text-white font-bold text-[15px] py-2 flex items-center justify-center text-center no-underline'
-            >
-              <div className='flex-col gap-1 justify-center'>
-                <div>
-                  Jum'at
-                </div>
-                <div className='text-[10px]'>
-                  09 Mei
-                </div>
-              </div>
-            </a>
-          </div>
-          <div className='w-20 h-20'>
-            <a
-              href="#"
-              className='w-full h-full bg-red-800 rounded-[12px] text-white font-bold text-[15px] py-2 flex items-center justify-center text-center no-underline'
-            >
-              <div className='flex-col gap-1 justify-center'>
-                <div>
-                  Sabtu
-                </div>
-                <div className='text-[10px]'>
-                  10 Mei
-                </div>
-              </div>
-            </a>
-          </div>
+          <TombolHari hari="Minggu" tanggal="04 Mei"/>
+          <TombolHari hari="Senin" tanggal="05 Mei"/>
+          <TombolHari hari="Selasa" tanggal="06 Mei"/>
+          <TombolHari hari="Rabu" tanggal="07 Mei"/>
+          <TombolHari hari="Kamis" tanggal="08 Mei"/>
+          <TombolHari hari="Jum'at" tanggal="09 Mei"/>
+          <TombolHari hari="Sabtu" tanggal="10 Mei"/>
           <div className='w-20 h-20'>
             <a href="">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-full h-full p-3">
@@ -209,12 +112,14 @@ function Home() {
             </a>
           </div>
         </div>
-        <Lapangan/>
-        <GarisLapangan/>
-        <Lapangan/>
-        <GarisLapangan/>
-        <Lapangan/>
-        <GarisLapangan/>
+        <div>
+          <Lapangan/>
+          <GarisLapangan/>
+          <Lapangan/>
+          <GarisLapangan/>
+          <Lapangan/>
+          <GarisLapangan/>
+        </div>
       </div>
     </div>
   )
