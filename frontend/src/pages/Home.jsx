@@ -1,10 +1,65 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Navbar from '../components/Navbar'
 import Lapangan from '../components/Lapangan'
 import GarisLapangan from '../components/GarisLapangan'
 import TombolHari from '../components/TombolHari'
+import axios from 'axios';
+
+function getSevenDaysDetails(dateInput = new Date()) {
+    const startDate = new Date(dateInput);
+    startDate.setHours(0, 0, 0, 0); // Reset waktu ke 00:00:00:000
+
+    const weekDetails = [];
+    const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const monthNames = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+
+    // Loop untuk 7 hari ke depan, dimulai dari startDate
+    for (let i = 0; i < 7; i++) {
+        const currentDay = new Date(startDate); // Buat salinan dari startDate
+        currentDay.setDate(startDate.getDate() + i); // Tambahkan 'i' hari dari startDate
+
+        weekDetails.push({
+            hari: dayNames[currentDay.getDay()], // Nama hari
+            tanggal: currentDay.getDate().toString(), // Tanggal numerik
+            bulan: monthNames[currentDay.getMonth()] // Nama bulan
+        });
+    }
+
+    return weekDetails;
+}
 
 function Home() {
+  const [lapangan, setLapangan] = useState()
+  useEffect(() => {
+    axios.get('http://192.168.216.103:8000/api/fields/1')
+      .then(response => {
+        setLapangan(response.data.data[0]);
+        console.log(response.data.data[0])
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+      });
+  }, []);
+
+  const toggleVisibility = (idToToggle) => {
+    console.log(`Attempting to toggle ID: ${idToToggle}`); // Debugging
+    setLapangan(prevListLapangan => { // Gunakan functional update untuk keandalan
+      const updatedList = prevListLapangan.map(lapangan => {
+        if (lapangan.id === idToToggle) {
+          console.log(`Toggling visible for ID ${idToToggle} from ${lapangan.visible} to ${!lapangan.visible}`); // Debugging
+          return { ...lapangan, visible: !lapangan.visible }; // Buat objek baru
+        }
+        return lapangan; // Kembalikan objek asli jika tidak diubah
+      });
+      return updatedList; // Kembalikan array baru
+    });
+  };
+
+  const list_tanggal = getSevenDaysDetails()
+
   return (
     <div className='bg-white'>
       <Navbar />
@@ -20,7 +75,7 @@ function Home() {
           <div className='mt-10 grid grid-cols-3 gap-4 w-full px-3'>
             <div className='col-span-2 w-full my-5'>
               <h1 className='font-sans font-bold text-left text-3xl'>
-                Lapangan Basket FILKOM
+                {lapangan && (lapangan.name)}
               </h1>
               <h5 className='mt-5 font-sans'>
                 Malang, Jawa Timur
@@ -29,11 +84,17 @@ function Home() {
               <h3 className='font-sans font-bold text-left text-xl'>
                 Deskripsi
               </h3>
-                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nulla sint illo quas ab quae labore pariatur architecto adipisci. Mollitia odio iste obcaecati cupiditate temporibus eius corrupti! Natus tempora illum odit.
+                {lapangan && lapangan.description}
               <h3 className='font-sans font-bold text-left text-xl mt-5'>
                 Aturan
               </h3>
-                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nulla sint illo quas ab quae labore pariatur architecto adipisci. Mollitia odio iste obcaecati cupiditate temporibus eius corrupti! Natus tempora illum odit.
+              <ul className='list-disc list-inside'>
+                {lapangan.rules.map((rule) => {
+                  return (
+                    <li>{rule}</li>
+                  )
+                })}
+              </ul>
               <hr className="my-5 h-0.5 border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-500 to-transparent opacity-50 dark:via-neutral-400" />
               {/* <h3 className='font-sans font-bold text-left text-xl'>
                 Fasilitas
@@ -76,9 +137,13 @@ function Home() {
                 Fasilitas
                 </h3>
                 <ul className='list-disc list-inside'>
-                  <li>Lapangan</li>
-                  <li>Kamar mandi</li>
-                  <li>Kelas abangku</li>
+                  {lapangan && (
+                    lapangan.facilities.map((facility) => {
+                      return (
+                        <li>{facility}</li>
+                      )
+                    })
+                  )}
                 </ul>
               </div>
             </div>
@@ -90,35 +155,53 @@ function Home() {
           </h1>
         </div>
         <div className='flex gap-4 justify-center mt-5 rounded-xl outline-hidden shadow-md p-3 h-fit w-fit justify-self-center'>
-          <div className='min-w-15 h-15'>
+          {/* <div className='min-w-15 h-15'>
             <a href="">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-full h-full p-3">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
               </svg>
             </a>
-          </div>
-          <TombolHari hari="Minggu" tanggal="04 Mei"/>
+          </div> */}
+          {list_tanggal.map(tanggal => {
+            return(
+              <div>
+                <TombolHari hari={tanggal.hari} tanggal={tanggal.tanggal+" "+tanggal.bulan}/>
+              </div>
+            )
+          })}
+          {/* <TombolHari hari="Minggu" tanggal="04 Mei"/>
           <TombolHari hari="Senin" tanggal="05 Mei"/>
           <TombolHari hari="Selasa" tanggal="06 Mei"/>
           <TombolHari hari="Rabu" tanggal="07 Mei"/>
           <TombolHari hari="Kamis" tanggal="08 Mei"/>
           <TombolHari hari="Jum'at" tanggal="09 Mei"/>
-          <TombolHari hari="Sabtu" tanggal="10 Mei"/>
-          <div className='w-15 h-15'>
+          <TombolHari hari="Sabtu" tanggal="10 Mei"/> */}
+          {/* <div className='w-15 h-15'>
             <a href="">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-full h-full p-3">
                 <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
               </svg>
             </a>
-          </div>
+          </div> */}
         </div>
         <div>
-          <Lapangan/>
+          {/* {lapangan.map(item => {
+            return (
+              <div key={item.id}>
+                <Lapangan id={item.id} // Teruskan ID
+                  deskripsi={item.deskripsi}
+                  visible={item.visible}
+                  onToggleVisibility={toggleVisibility}/>
+                <GarisLapangan/>
+              </div>
+            );
+          })} */}
+          {/* <Lapangan/>
           <GarisLapangan/>
           <Lapangan/>
           <GarisLapangan/>
           <Lapangan/>
-          <GarisLapangan/>
+          <GarisLapangan/> */}
         </div>
       </div>
     </div>
