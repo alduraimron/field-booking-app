@@ -1,33 +1,106 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import ProfileDropdown from './ProfileDropdown';
 
 function Navbar() {
+    const [token, setToken] = useState('');
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [user, setUser] = useState(null);
+     // Fungsi untuk memeriksa status login dan data user dari sessionStorage
+    const checkLoginStatus = () => {
+        const token = sessionStorage.getItem('sanctumToken');
+        const userDataString = sessionStorage.getItem('user'); // Ambil data user sebagai string JSON
+
+        if (token && userDataString) {
+            setToken(token);
+            setIsLoggedIn(true);
+            try {
+                // Pastikan userDataString valid JSON
+                setUser(JSON.parse(userDataString));
+            } catch (e) {
+                console.error("Error parsing user data from sessionStorage:", e);
+                setUser(null); // Reset user jika parsing gagal
+                setIsLoggedIn(false); // Reset isLoggedIn jika ada masalah data
+            }
+        } else {
+            setIsLoggedIn(false);
+            setUser(null);
+        }
+    };
+
+    // Effect untuk inisialisasi dan mendengarkan event 'storage'
+    useEffect(() => {
+        // 1. Panggil saat komponen dimuat pertama kali
+        checkLoginStatus();
+
+        // 2. Tambahkan event listener untuk memantau perubahan storage
+        // Ini akan terpicu jika ada perubahan dari tab lain atau jika Anda dispatch secara manual
+        window.addEventListener('storage', checkLoginStatus);
+
+        // 3. Cleanup function: hapus event listener saat komponen dilepas
+        return () => {
+            window.removeEventListener('storage', checkLoginStatus);
+        };
+    }, []); // Dependensi kosong agar hanya berjalan sekali saat mount
+
+    // Effect untuk debugging (opsional, bisa dihapus setelah fix)
+    useEffect(() => {
+        console.log("Navbar: isLoggedIn changed to", isLoggedIn);
+        console.log("Navbar: User data changed to", user);
+    }, [isLoggedIn, user]);
+
+
+
     return (
-        <nav className="bg-white dark:bg-gray-900 fixed w-full z-20 top-0 start-0 border-b border-gray-200 dark:border-gray-600">
-            <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-                <a
-                    href="https://flowbite.com/"
+        <nav className="bg-white dark:bg-zinc-900 md:fixed w-full z-20 top-0 start-0 border-b border-gray-200 dark:border-gray-600">
+            <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto py-4 px-4 sm:px-6 sm:max-w-xl md:max-w-2xl lg:max-w-5xl xl:max-w-7xl">
+                <Link
+                    to="/"
                     className="flex items-center space-x-3 rtl:space-x-reverse"
                 >
-                    <img
+                    {/* <img
                         src="https://flowbite.com/docs/images/logo.svg"
                         className="h-8"
                         alt="Flowbite Logo"
-                    />
+                    /> */}
+                    <div className="relative mr-3">
+                        <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                            <div className="flex space-x-1">
+                                <div className="w-0.5 h-3 bg-yellow-400 rounded-full" />
+                                <div className="w-0.5 h-4 bg-yellow-400 rounded-full" />
+                                <div className="w-0.5 h-3 bg-yellow-400 rounded-full" />
+                            </div>
+                        </div>
+                        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-orange-500 rounded-full" />
+                    </div>
                     <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">
-                        Flowbite
+                        Seport
                     </span>
-                </a>
+                </Link>
                 <div className="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
-                    <Link to="/login">
-                        <button
-                            type="button"
-                            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-                        >
-                            Login
-                        </button>
-                    </Link>
-                    {/* <button
+                    {!isLoggedIn ? (
+                        <Link to="/login">
+                            <button
+                                type="button"
+                                className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-yellow-700"
+                            >
+                                Login
+                            </button>
+                        </Link>
+                    ) : (
+                        <Link to="/profile" className="flex items-center space-x-2 cursor-pointer">
+                            <img
+                                src={user?.avatarUrl || 'https://ui-avatars.com/api/?name=' + (user?.name || 'User')}
+                                alt="User avatar"
+                                className="w-8 h-8 rounded-full"
+                            />
+                            <span className="text-gray-800 dark:text-white font-medium hidden sm:inline">
+                                {user?.name || 'Profil'} {/* Ubah teks menjadi "Profil" atau nama user */}
+                            </span>
+                        </Link>
+                    )}
+                </div>
+                {/* <button
                         data-collapse-toggle="navbar-sticky"
                         type="button"
                         className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
@@ -51,7 +124,7 @@ function Navbar() {
                             />
                         </svg>
                     </button> */}
-                </div>
+
                 {/* <div
                     className="items-center justify-between hidden w-full md:flex md:w-auto md:order-1"
                     id="navbar-sticky"

@@ -3,7 +3,7 @@ name: Deploy Laravel + React App
 on:
   push:
     branches:
-      - main
+      - dev
 
 jobs:
   build-and-deploy:

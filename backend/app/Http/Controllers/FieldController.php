@@ -15,7 +15,8 @@ class FieldController extends Controller
      */
     public function index()
     {
-        return $this->success([Field::find(1)]);
+        $field = Field::all();
+        return $this->success([$field]);
     }
 
     /**

@@ -18,6 +18,7 @@ class Field extends Model
         'address',
         'rules',
         'facilities',
+        'image_path',
     ];
 
     protected $casts = [
