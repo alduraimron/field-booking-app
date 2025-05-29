@@ -301,6 +301,7 @@ function Home() {
               <div key={item.id}>
                 <Lapangan
                   id={item.id}
+                  name={item.name}
                   deskripsi={item.description}
                   visible={item.visible}
                   onToggleVisibility={toggleVisibility}

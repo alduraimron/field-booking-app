@@ -5,7 +5,7 @@ import LapanganJam from './LapanganJam';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Terima prop onBookClick dari Home
-function Lapangan({ id, deskripsi, visible, onToggleVisibility, selectedDate, onBookClick }) {
+function Lapangan({ name, id, deskripsi, visible, onToggleVisibility, selectedDate, onBookClick }) {
   const [allJadwal, setAllJadwal] = useState([]);
   const [filteredJadwal, setFilteredJadwal] = useState([]);
   const [loadingJadwal, setLoadingJadwal] = useState(false);
@@ -90,7 +90,7 @@ function Lapangan({ id, deskripsi, visible, onToggleVisibility, selectedDate, on
             <div className='w-full sm:grow'>
               <div className='mb-4'>
                 <h3 className='font-sans font-bold text-lg sm:text-xl mb-2'>
-                  Deskripsi
+                  {name}
                 </h3>
                 <p className='text-sm sm:text-base text-gray-700 leading-relaxed'>
                   {deskripsi}
