@@ -181,8 +181,7 @@ function Home() {
   return (
     <div className='bg-white min-h-screen'>
       <Navbar />
-
-      <div className='mx-auto px-4 pt-16 mt-5 sm:px-6 sm:pt-20 max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-5xl xl:max-w-7xl'>
+      <div className='mx-auto px-4 mt-5 sm:px-6 md:pt-20 max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-5xl xl:max-w-7xl'>
 
         <div className='w-full mb-4'>
           <img
@@ -239,7 +238,7 @@ function Home() {
                 <div className='flex items-center justify-between mb-4'>
                   <div className='flex items-baseline'>
                     <h3 className='font-bold text-xl sm:text-2xl text-gray-900'>
-                      Rp 50.000
+                      Rp 100.000
                     </h3>
                     <span className='ml-2 text-sm text-gray-600'>
                       per sesi

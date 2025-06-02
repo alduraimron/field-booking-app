@@ -93,7 +93,7 @@ const Profile = () => {
                     </div>
                 </div>
 
-                {/* Anda bisa menambahkan bagian lain di halaman profil, misalnya riwayat booking, pengaturan, dll. */}
+                {/* Anda bisa menambahkan bagian lain di halaman profil, misalnya riwayat booking, pengaturan, dll.
                 <div className='bg-white rounded-lg shadow-md border border-gray-100 p-6'>
                     <h3 className='font-sans font-bold text-lg sm:text-xl mb-3'>
                         Informasi Tambahan
@@ -101,7 +101,7 @@ const Profile = () => {
                     <p className='text-sm sm:text-base text-gray-700'>
                         Ini adalah halaman profil Anda. Anda bisa mengedit detail atau melihat riwayat aktivitas di sini (fitur tambahan).
                     </p>
-                </div>
+                </div> */}
 
             </div>
         </div>

@@ -5,7 +5,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:5173'], // Jangan pakai '*'
+    'allowed_origins' => ['http://localhost:5173', 'http://192.168.1.14:5173'], // Jangan pakai '*'
 
     'allowed_origins_patterns' => [],
 
