@@ -7,11 +7,11 @@ WORKDIR /app
 
 # Copy composer files relative to the build context (which is project-akhir-PAW/)
 # So, we need to specify 'backend/'
-COPY backend/composer.json backend/composer.lock ./
+COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # Copy seluruh source code Laravel dari folder 'backend' di build context
-COPY backend/. /app
+COPY . /app
 
 # Jalankan optimisasi Laravel
 RUN php artisan optimize:clear
@@ -62,11 +62,11 @@ RUN chown -R www-data:www-data /var/www/html/storage \
 
 # Konfigurasi Nginx
 # Asumsi: backend/nginx/nginx.conf hanya berisi server {} block
-COPY backend/nginx/nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Konfigurasi Supervisor
 # Asumsi: backend/supervisor/supervisord.conf sudah benar
-COPY backend/supervisor/supervisord.conf /etc/supervisord.conf
+COPY supervisor/supervisord.conf /etc/supervisord.conf
 
 # Expose port 80
 EXPOSE 80
