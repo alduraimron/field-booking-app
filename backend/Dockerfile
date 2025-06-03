@@ -78,8 +78,8 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts
 # Copy semua source Laravel
 COPY . /app
 
-RUN php artisan optimize:clear
-RUN php artisan optimize
+#RUN php artisan optimize:clear
+#RUN php artisan optimize
 
 # Stage 2: Runtime PHP-FPM + Nginx
 FROM php:8.2-fpm-alpine
