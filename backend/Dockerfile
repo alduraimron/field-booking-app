@@ -106,7 +106,7 @@ RUN docker-php-ext-install pdo_mysql opcache bcmath exif pcntl gd intl
 RUN rm -rf /var/cache/apk/*
 
 # Copy konfigurasi php-fpm jika ada (opsional)
-COPY php-fpm-config.conf /usr/local/etc/php-fpm.d/www.conf
+#COPY php-fpm-config.conf /usr/local/etc/php-fpm.d/www.conf
 
 # Copy hasil build composer dari stage 1 ke folder aplikasi
 COPY --from=composer_deps /app /var/www/html
