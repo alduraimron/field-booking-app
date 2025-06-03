@@ -67,19 +67,71 @@
 # # HEALTHCHECK -- Opsional, tapi disarankan
 # # HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl --fail http://localhost/api/health || exit 1
 # Stage 1: Builder - install composer dependencies & prepare Laravel app
-FROM composer:2.7 as composer_deps
+# FROM composer:2.7 as composer_deps
 
-WORKDIR /app
+# WORKDIR /app
 
-# Copy composer files dan install dependencies
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+# # Copy composer files dan install dependencies
+# COPY composer.json composer.lock ./
+# RUN composer install --no-dev --optimize-autoloader --no-scripts
 
-# Copy semua source Laravel
-COPY . /app
+# # Copy semua source Laravel
+# COPY . /app
 
-#RUN php artisan optimize:clear
-#RUN php artisan optimize
+# #RUN php artisan optimize:clear
+# #RUN php artisan optimize
+
+# # Stage 2: Runtime PHP-FPM + Nginx
+# FROM php:8.2-fpm-alpine
+
+# # Install system dependencies (nginx, supervisor, etc)
+# RUN apk add --no-cache \
+#     nginx \
+#     supervisor \
+#     bash \
+#     mysql-client \
+#     curl \
+#     git \
+#     build-base \
+#     libpng-dev \
+#     libjpeg-turbo-dev \
+#     libwebp-dev \
+#     freetype-dev \
+#     icu-dev
+
+# # Install PHP extensions yang dibutuhkan Laravel
+# RUN docker-php-ext-install pdo_mysql opcache bcmath exif pcntl gd intl
+
+# # Bersihkan cache apk
+# RUN rm -rf /var/cache/apk/*
+
+# # Copy konfigurasi php-fpm jika ada (opsional)
+# #COPY php-fpm-config.conf /usr/local/etc/php-fpm.d/www.conf
+
+# # Copy hasil build composer dari stage 1 ke folder aplikasi
+# COPY --from=composer_deps /app /var/www/html
+
+# # Set permission storage dan bootstrap/cache
+# RUN chown -R www-data:www-data /var/www/html/storage \
+#     && chmod -R 775 /var/www/html/storage \
+#     && chown -R www-data:www-data /var/www/html/bootstrap/cache \
+#     && chmod -R 775 /var/www/html/bootstrap/cache
+
+# # Copy konfigurasi nginx
+# COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+
+# # Copy konfigurasi supervisor
+# COPY supervisor/supervisord.conf /etc/supervisord.conf
+
+# # Expose port 80
+# EXPOSE 80
+
+# # Ganti user ke www-data (user nginx & php-fpm)
+# USER www-data
+
+# # Jalankan supervisord (menjalankan nginx + php-fpm)
+# CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+# ... (Tahap 1: composer_deps) ...
 
 # Stage 2: Runtime PHP-FPM + Nginx
 FROM php:8.2-fpm-alpine
@@ -105,9 +157,6 @@ RUN docker-php-ext-install pdo_mysql opcache bcmath exif pcntl gd intl
 # Bersihkan cache apk
 RUN rm -rf /var/cache/apk/*
 
-# Copy konfigurasi php-fpm jika ada (opsional)
-#COPY php-fpm-config.conf /usr/local/etc/php-fpm.d/www.conf
-
 # Copy hasil build composer dari stage 1 ke folder aplikasi
 COPY --from=composer_deps /app /var/www/html
 
@@ -117,11 +166,24 @@ RUN chown -R www-data:www-data /var/www/html/storage \
     && chown -R www-data:www-data /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/bootstrap/cache
 
-# Copy konfigurasi nginx
-COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+# --- START PERBAIKAN NGINX ---
+
+# Buat direktori Nginx logs dan set permission
+RUN mkdir -p /var/log/nginx \
+    && chown -R www-data:www-data /var/log/nginx \
+    && chmod -R 755 /var/log/nginx
+
+# Hapus konfigurasi default Nginx yang mungkin bentrok
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copy konfigurasi nginx Anda
+# Pastikan file backend/nginx/nginx.conf hanya berisi server {} block
+COPY backend/nginx/nginx.conf /etc/nginx/conf.d/default.conf
+
+# --- END PERBAIKAN NGINX ---
 
 # Copy konfigurasi supervisor
-COPY supervisor/supervisord.conf /etc/supervisord.conf
+COPY backend/supervisor/supervisord.conf /etc/supervisord.conf
 
 # Expose port 80
 EXPOSE 80
@@ -131,3 +193,6 @@ USER www-data
 
 # Jalankan supervisord (menjalankan nginx + php-fpm)
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+
+# HEALTHCHECK -- Opsional, tapi disarankan
+# HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl --fail http://localhost/api/health || exit 1
