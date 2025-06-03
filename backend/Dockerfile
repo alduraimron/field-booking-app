@@ -1,22 +1,68 @@
-# backend/Dockerfile
-FROM php:8.2-fpm
+# Stage 1: Builder - Menginstal dependensi PHP Composer dan menyiapkan file Laravel
+FROM composer:2.7 as composer_deps
+WORKDIR /app
+COPY backend/composer.json backend/composer.lock ./
+RUN composer install --no-dev --optimize-autoloader --no-scripts
+COPY backend/ . /app
+RUN php artisan optimize:clear
+RUN php artisan optimize
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    git curl zip unzip libonig-dev libxml2-dev libzip-dev \
-    && docker-php-ext-install pdo pdo_mysql zip
+# Stage 2: PHP-FPM - Menjalankan aplikasi Laravel dengan PHP-FPM
+FROM php:8.2-fpm-alpine
 
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Menginstal dependensi sistem yang diperlukan oleh PHP dan Laravel
+RUN apk add --no-cache \
+    nginx \
+    supervisor \
+    bash \
+    mysql-client \
+    curl \
+    git \
+    build-base \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    libwebp-dev \
+    freetype-dev \
+    icu-dev \
+    # Tambahkan lebih banyak dependensi PHP jika diperlukan oleh Laravel Anda
+    # Misalnya: gd (untuk image manipulation), zip (untuk ZipArchive)
 
-WORKDIR /var/www
-COPY . .
+# Menginstal ekstensi PHP yang diperlukan
+RUN docker-php-ext-install pdo_mysql opcache bcmath exif pcntl gd intl
 
-RUN composer install
+# Menghapus cache APK setelah instalasi
+RUN rm -rf /var/cache/apk/*
 
-# Permissions
-RUN chown -R www-data:www-data /var/www \
-    && chmod -R 755 /var/www/storage
+# Konfigurasi PHP-FPM untuk menjalankan worker processes
+COPY backend/php-fpm-config.conf /usr/local/etc/php-fpm.d/www.conf
+# Atau gunakan default jika php-fpm-config.conf tidak ada/dibutuhkan
 
-EXPOSE 9000
-CMD ["php-fpm"]
+# Salin kode aplikasi Laravel dari tahap builder
+COPY --from=composer_deps /app /var/www/html
+
+# Mengatur izin direktori storage Laravel
+RUN chown -R www-data:www-data /var/www/html/storage \
+    && chmod -R 775 /var/www/html/storage \
+    && chown -R www-data:www-data /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/bootstrap/cache
+
+# Konfigurasi Nginx
+COPY backend/nginx/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Konfigurasi Supervisor untuk menjalankan Nginx dan PHP-FPM
+# Supervisor akan memastikan Nginx dan PHP-FPM selalu berjalan
+COPY backend/supervisor/supervisord.conf /etc/supervisord.conf
+
+# Mengekspos port 80 untuk Nginx
+EXPOSE 80
+
+# Mengganti user default menjadi www-data untuk proses Nginx/PHP-FPM
+# Ini adalah praktik keamanan yang baik
+USER www-data
+
+# Perintah untuk menjalankan Supervisor
+# Supervisor akan menjalankan Nginx dan PHP-FPM
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+
+# HEALTHCHECK -- Opsional, tapi disarankan
+# HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl --fail http://localhost/api/health || exit 1
