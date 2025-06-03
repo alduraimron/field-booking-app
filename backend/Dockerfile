@@ -14,8 +14,8 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts
 COPY . /app
 
 # Jalankan optimisasi Laravel
-RUN php artisan optimize:clear
-RUN php artisan optimize
+#RUN php artisan optimize:clear
+#RUN php artisan optimize
 
 # Stage 2: PHP-FPM - Menjalankan aplikasi Laravel dengan PHP-FPM dan Nginx
 FROM php:8.2-fpm-alpine
