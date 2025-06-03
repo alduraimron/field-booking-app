@@ -5,7 +5,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:5173', 'http://192.168.1.14:5173', 'seport-alb-469424020.us-east-1.elb.amazonaws.com'], // Jangan pakai '*'
+    'allowed_origins' => ['http://localhost:5173', 'http://192.168.1.14:5173', 'seport-alb-469424020.us-east-1.elb.amazonaws.com', 'http://44.202.3.43:80'], // Jangan pakai '*'
 
     'allowed_origins_patterns' => [],
 
