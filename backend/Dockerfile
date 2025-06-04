@@ -1,38 +1,45 @@
-# Stage 1 builder
-# Stage 1 builder
+# Stage 1: Builder
 FROM php:8.3-cli-alpine AS builder
 
+# Install system dependencies
 RUN apk add --no-cache \
     git \
     zip \
-    unzip
+    unzip \
+    libzip-dev
 
-# menyalin composer binary dari image composer resmi
+# Install PHP extensions needed for Laravel
+RUN docker-php-ext-install \
+    pdo_mysql \
+    zip
+
+# Copy Composer binary from official image
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# mengatur direktory kerja di dalam kontainer builder
+# Set working directory
 WORKDIR /app
 
-# menyalin file composer untuk memanfaatkan caching docker
+# Copy composer files first for better caching
 COPY ./composer.json ./composer.lock ./
 
-# --- START OF FIX for "Could not open input file: artisan" ---
-# Salin file-file inti Laravel yang dibutuhkan Composer skrip *sebelum* install
-# Ini memastikan 'artisan' dan direktori penting lainnya ada
+# Copy essential Laravel files needed before composer install
 COPY ./artisan ./
 COPY ./app ./app
 COPY ./bootstrap ./bootstrap
 COPY ./config ./config
-# --- END OF FIX ---
 
-# menginstall depedensi composer
-# Layer ini akan di-cache jika composer.json/lock tidak berubah
-RUN composer install --no-dev --optimize-autoloader
+# Create routes directory and copy route files
+# This fixes the "No such file or directory" error for routes/api.php
+COPY ./routes ./routes
 
-# menyalin seluruh kode aplikasi laravel dari host ke direktori kerja container docker
-# Layer ini hanya akan di-invalidasi jika ada perubahan pada file aplikasi yang tersisa
-COPY ./ .
+# Install Composer dependencies
+RUN composer install --no-dev --optimize-autoloader --no-scripts
 
+# Copy the rest of the application
+COPY ./ ./
+
+# Run Laravel's post-install scripts
+RUN composer run-script post-autoload-dump
 # Stage 2 production
 FROM php:8.3-fpm-alpine AS production
 
