@@ -1,4 +1,5 @@
 # Stage 1 builder
+# Stage 1 builder
 FROM php:8.3-cli-alpine AS builder
 
 RUN apk add --no-cache \
@@ -15,13 +16,22 @@ WORKDIR /app
 # menyalin file composer untuk memanfaatkan caching docker
 COPY ./composer.json ./composer.lock ./
 
+# --- START OF FIX for "Could not open input file: artisan" ---
+# Salin file-file inti Laravel yang dibutuhkan Composer skrip *sebelum* install
+# Ini memastikan 'artisan' dan direktori penting lainnya ada
+COPY ./artisan ./
+COPY ./app ./app
+COPY ./bootstrap ./bootstrap
+COPY ./config ./config
+# --- END OF FIX ---
+
 # menginstall depedensi composer
+# Layer ini akan di-cache jika composer.json/lock tidak berubah
 RUN composer install --no-dev --optimize-autoloader
 
 # menyalin seluruh kode aplikasi laravel dari host ke direktori kerja container docker
-# layer ini akan di invalidasi jika ada perubahan pada file aplikasi
+# Layer ini hanya akan di-invalidasi jika ada perubahan pada file aplikasi yang tersisa
 COPY ./ .
-
 
 # Stage 2 production
 FROM php:8.3-fpm-alpine AS production
