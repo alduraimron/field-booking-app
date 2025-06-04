@@ -44,40 +44,40 @@ RUN composer run-script post-autoload-dump
 FROM php:8.3-fpm-alpine AS production
 
 RUN apk add --no-cache \
-    php-curl \
-    php-dom \
-    php-json \
-    php-mbstring \
-    php-pdo_mysql \
-    php-tokenizer \
-    php-xml \
-    php-xmlreader \
-    php-zip
+    libzip-dev \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    icu-dev \
+    oniguruma-dev
 
-# User and group www-data are already provided by php-fpm-alpine base image
+# Install PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+        pdo_mysql \
+        zip \
+        gd \
+        intl \
+        mbstring \
+        bcmath
+
 
 # Mengatur direktori kerja dalam kontainer produksi
 WORKDIR /var/www/html
 
-# menyalin file dari stage builder ke stage production
-COPY --from=builder /app/vendor /var/www/html/vendor
-COPY --from=builder /app/artisan /var/www/html/artisan
-COPY --from=builder /app/bootstrap /var/www/html/bootstrap
-COPY --from=builder /app/config /var/www/html/config
-COPY --from=builder /app/public /var/www/html/public
-COPY --from=builder /app/resources /var/www/html/resources
-COPY --from=builder /app/routes /var/www/html/routes
-COPY --from=builder /app/app /var/www/html/app
-# No need to copy composer.json/lock to production stage
+# Copy application files from builder stage
+COPY --from=builder --chown=www-data:www-data /app /var/www/html
 
-# Membuat direktori storage dan mengatur izin yang benar
-# Changing to 777 to ensure write access for Laravel's cache/logs
-RUN mkdir -p /var/www/html/storage \
+# Create necessary directories with proper permissions
+RUN mkdir -p /var/www/html/storage/framework/cache \
+    && mkdir -p /var/www/html/storage/framework/sessions \
+    && mkdir -p /var/www/html/storage/framework/views \
+    && mkdir -p /var/www/html/storage/logs \
+    && mkdir -p /var/www/html/bootstrap/cache \
     && chown -R www-data:www-data /var/www/html/storage \
-    && chmod -R 777 /var/www/html/storage \
     && chown -R www-data:www-data /var/www/html/bootstrap/cache \
-    && chmod -R 777 /var/www/html/bootstrap/cache
-
+    && chmod -R 775 /var/www/html/storage \
+    && chmod -R 775 /var/www/html/bootstrap/cache
 # Mengatur user yang akan menjalankan proses php-fpm
 USER www-data
 
