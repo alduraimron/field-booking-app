@@ -38,8 +38,8 @@ RUN apk add --no-cache \
     php-zip
 
 # mengatur user dan group yang akan menjalankan PHP-FPM
-RUN addgroup -g 82 -S www-data \
-    && adduser -u 82 -D -S -G www-data www-data
+# RUN addgroup -g 82 -S www-data \
+#     && adduser -u 82 -D -S -G www-data www-data
 
 # Mengatur direktori kerja dalam kontainer produksi
 WORKDIR /var/www/html
