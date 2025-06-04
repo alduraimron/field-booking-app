@@ -29,3 +29,8 @@ Route::get('/fields/{field_id}/courts', [CourtController::class, 'index']);
 Route::get('/courts/{court_id}/schedules', [ScheduleController::class, 'index']);
 
 Route::post('/bookings', [BookingController::class, 'store'])->middleware('auth:sanctum');
+
+
+Route::get('/up', function () {
+    return response()->json(['status' => 'API is up!']);
+});

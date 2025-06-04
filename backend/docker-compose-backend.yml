@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  backend:
+    image: alduraimron/my-backend:latest
+    container_name: backend_container
+    restart: always
+    environment:
+      APP_ENV: production
+      APP_DEBUG: false
+      APP_URL: http://seport-alb-469424020.us-east-1.elb.amazonaws.com
+      DB_CONNECTION: mysql
+      DB_HOST: seport-mysql-db.c5ik8ecg4cxp.us-east-1.rds.amazonaws.com
+      DB_PORT: 3306
+      DB_DATABASE: seport_db
+      DB_USERNAME: admin
+      DB_PASSWORD: Secret123!
+      APP_KEY: base64:DnCcX/IKoB9hASFxAGINSFGHC+pAUtNZ9oWDtafqBhE=
+    ports:
+      - "9000:9000"
+    networks:
+      - be-network
+
+  nginx:
+    image: alduraimron/my-nginx:latest
+    container_name: nginx_container
+    restart: always
+    ports:
+      - "80:80"
+    networks:
+      - be-network
+    depends_on:
+      - backend
+
+networks:
+  be-network:
+    driver: bridge

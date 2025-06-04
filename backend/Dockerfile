@@ -55,6 +55,8 @@ COPY --from=builder /app/public /var/www/html/public
 COPY --from=builder /app/resources /var/www/html/resources
 COPY --from=builder /app/routes /var/www/html/routes
 COPY --from=builder /app/app /var/www/html/app
+COPY --from=builder /app/composer.json /var/www/html/composer.json
+COPY --from=builder /app/composer.lock /var/www/html/composer.lock
 
 # Membuat direktori storage dan mengatur izin yang benar
 RUN mkdir -p /var/www/html/storage \
