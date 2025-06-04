@@ -1,56 +1,68 @@
-# Stage 1: Composer - install dependencies
-FROM composer:2.7 AS composer_deps
+# Stage 1 builder
+FROM php:8.3-cli-alpine AS builder
 
+RUN apk add --no-cache \
+    git \
+    zip \
+    unzip
+
+# menyalin composer binary dari image composer resmi
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# mengatur direktory kerja di dalam kontainer builder
 WORKDIR /app
 
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+# menyalin file composer untuk memanfaatkan caching docker
+COPY ./composer.json ./composer.lock ./
 
-COPY . /app
+# menginstall depedensi composer
+RUN composer install --no-dev --optimize-autoloader
 
-# Stage 2: PHP-FPM + Nginx
-FROM php:8.2-fpm-alpine
+# menyalin seluruh kode aplikasi laravel dari host ke direktori kerja container docker
+# layer ini akan di invalidasi jika ada perubahan pada file aplikasi
+COPY ./ .
 
-# Install Nginx & dependencies
+# stafe 2 production
+
+FROM php:8.3-fpm-alpine AS production
+
 RUN apk add --no-cache \
-    nginx \
-    bash \
-    mysql-client \
-    curl \
-    git \
-    build-base \
-    libpng-dev \
-    libjpeg-turbo-dev \
-    libwebp-dev \
-    freetype-dev \
-    icu-dev
+    php-curl \
+    php-dom \
+    php-json \
+    php-mbstring \
+    php-pdo_mysql \
+    php-tokenizer \
+    php-xml \
+    php-xmlreader \
+    php-zip
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo_mysql opcache bcmath exif pcntl gd intl
+# mengatur user dan group yang akan menjalankan PHP-FPM
+RUN addgroup -g 82 -S www-data \
+    && adduser -u 82 -D -S -G www-data www-data
 
-# Bersihkan cache
-RUN rm -rf /var/cache/apk/*
+# Mengatur direktori kerja dalam kontainer produksi
+WORKDIR /var/www/html
 
-# Buat direktori log & socket PHP
-RUN mkdir -p /var/log/nginx /run/php && chmod -R 755 /var/log/nginx
+# menyalin file dari stage builder ke stage production
+COPY --from=builder /app/vendor /var/www/html/vendor
+COPY --from=builder /app/artisan /var/www/html/artisan
+COPY --from=builder /app/bootstrap /var/www/html/bootstrap
+COPY --from=builder /app/config /var/www/html/config
+COPY --from=builder /app/public /var/www/html/public
+COPY --from=builder /app/resources /var/www/html/resources
+COPY --from=builder /app/routes /var/www/html/routes
+COPY --from=builder /app/app /var/www/html/app
 
-# Hapus default config nginx
-RUN rm -f /etc/nginx/conf.d/default.conf
+# Membuat direktori storage dan mengatur izin yang benar
+RUN mkdir -p /var/www/html/storage \
+    && chown -R www-data:www-data /var/www/html/storage \
+    && chmod -R 775 /var/www/html/storage \
+    && chown -R www-data:www-data /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/bootstrap/cache
 
-# Salin Laravel app
-COPY --from=composer_deps /app /var/www/html
+# Mengatur user yang akan menjalankan proses php-fpm
+USER www-data
 
-# Ubah permission storage & cache
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \
-    chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
-
-# Salin konfigurasi nginx
-COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
-
-# Salin skrip start
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
-
-EXPOSE 80
-
-CMD ["/start.sh"]
+EXPOSE 9000
+CMD ["php-fpm"]

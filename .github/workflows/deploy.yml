@@ -35,3 +35,10 @@ jobs:
           context: ./backend
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/my-backend:latest
+
+      - name: Build and Push Nginx
+        uses: docker/build-push-action@v5 
+        with:
+          context: ./backend/nginx 
+          push: true 
+          tags: ${{ secrets.DOCKER_USERNAME }}/my-nginx:latest 
