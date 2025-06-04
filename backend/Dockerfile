@@ -31,7 +31,7 @@ RUN apk add --no-cache \
     php-dom \
     php-json \
     php-mbstring \
-    php-pdo_mysql \ # This should fix the PDOException
+    php-pdo_mysql \
     php-tokenizer \
     php-xml \
     php-xmlreader \
