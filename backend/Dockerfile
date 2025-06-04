@@ -15,12 +15,14 @@ WORKDIR /app
 # menyalin file composer untuk memanfaatkan caching docker
 COPY ./composer.json ./composer.lock ./
 
-# menginstall depedensi composer
-RUN composer install --no-dev --optimize-autoloader
-
 # menyalin seluruh kode aplikasi laravel dari host ke direktori kerja container docker
 # layer ini akan di invalidasi jika ada perubahan pada file aplikasi
 COPY ./ .
+
+# menginstall depedensi composer
+RUN composer install --no-dev --optimize-autoloader
+
+
 
 # stafe 2 production
 
