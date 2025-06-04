@@ -15,17 +15,15 @@ WORKDIR /app
 # menyalin file composer untuk memanfaatkan caching docker
 COPY ./composer.json ./composer.lock ./
 
+# menginstall depedensi composer
+RUN composer install --no-dev --optimize-autoloader
+
 # menyalin seluruh kode aplikasi laravel dari host ke direktori kerja container docker
 # layer ini akan di invalidasi jika ada perubahan pada file aplikasi
 COPY ./ .
 
-# menginstall depedensi composer
-RUN composer install --no-dev --optimize-autoloader
 
-
-
-# stafe 2 production
-
+# Stage 2 production
 FROM php:8.3-fpm-alpine AS production
 
 RUN apk add --no-cache \
@@ -33,15 +31,13 @@ RUN apk add --no-cache \
     php-dom \
     php-json \
     php-mbstring \
-    php-pdo_mysql \
+    php-pdo_mysql \ # This should fix the PDOException
     php-tokenizer \
     php-xml \
     php-xmlreader \
     php-zip
 
-# mengatur user dan group yang akan menjalankan PHP-FPM
-# RUN addgroup -g 82 -S www-data \
-#     && adduser -u 82 -D -S -G www-data www-data
+# User and group www-data are already provided by php-fpm-alpine base image
 
 # Mengatur direktori kerja dalam kontainer produksi
 WORKDIR /var/www/html
@@ -55,15 +51,15 @@ COPY --from=builder /app/public /var/www/html/public
 COPY --from=builder /app/resources /var/www/html/resources
 COPY --from=builder /app/routes /var/www/html/routes
 COPY --from=builder /app/app /var/www/html/app
-COPY --from=builder /app/composer.json /var/www/html/composer.json
-COPY --from=builder /app/composer.lock /var/www/html/composer.lock
+# No need to copy composer.json/lock to production stage
 
 # Membuat direktori storage dan mengatur izin yang benar
+# Changing to 777 to ensure write access for Laravel's cache/logs
 RUN mkdir -p /var/www/html/storage \
     && chown -R www-data:www-data /var/www/html/storage \
-    && chmod -R 775 /var/www/html/storage \
+    && chmod -R 777 /var/www/html/storage \
     && chown -R www-data:www-data /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/bootstrap/cache
+    && chmod -R 777 /var/www/html/bootstrap/cache
 
 # Mengatur user yang akan menjalankan proses php-fpm
 USER www-data
