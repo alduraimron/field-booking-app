@@ -25,20 +25,23 @@ jobs:
       - name: Build and Push Frontend
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend/devsecops
+          context: ./frontend
+          file: ./frontend/devsecops/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/frontend-seport:latest
 
       - name: Build and Push Backend
         uses: docker/build-push-action@v5
         with:
-          context: ./backend/devsecops
+          context: ./backend
+          file: ./backend/devsecops/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/backend-seport:latest
 
       - name: Build and Push Nginx
         uses: docker/build-push-action@v5 
         with:
-          context: ./backend/devsecops/nginx
+          context: ./backend
+          file: ./backend/devsecops/nginx/Dockerfile
           push: true 
           tags: ${{ secrets.DOCKER_USERNAME }}/nginx-seport:latest 
