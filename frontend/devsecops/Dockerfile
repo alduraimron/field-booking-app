@@ -7,7 +7,7 @@ WORKDIR /app
 
 # Menyalin package.json dan package-lock.json terlebih dahulu
 # untuk memanfaatkan caching Docker layer.
-COPY package*.json ./
+COPY /package*.json ./
 
 # Menginstal semua dependensi Node.js.
 RUN npm install
