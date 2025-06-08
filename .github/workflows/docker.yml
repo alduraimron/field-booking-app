@@ -1,0 +1,44 @@
+name: Deploy to docker hub for devsecops
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend/devsecops
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/frontend-seport:latest
+
+      - name: Build and Push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend/devsecops
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/backend-seport:latest
+
+      - name: Build and Push Nginx
+        uses: docker/build-push-action@v5 
+        with:
+          context: ./backend/devsecops/nginx
+          push: true 
+          tags: ${{ secrets.DOCKER_USERNAME }}/nginx-seport:latest 
