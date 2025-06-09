@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-api-deployment
+  labels:
+    app: laravel-api
+spec:
+  replicas: 1 
+  selector:
+    matchLabels:
+      app: laravel-api
+  template:
+    metadata:
+      labels:
+        app: laravel-api
+    spec:
+      volumes:
+      - name: app-code 
+        emptyDir: {}
+      containers:
+      - name: laravel-php-fpm 
+        image: alduraimron/backend-seport:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 9000
+        volumeMounts:
+        - name: app-code
+          mountPath: /var/www/html
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: db-credentials 
+        livenessProbe:
+          tcpSocket:
+            port: 9000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: 9000
+          initialDelaySeconds: 20
+          periodSeconds: 5
+      - name: laravel-nginx 
+        image: alduraimron/nginx-seport:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80 
+        volumeMounts:
+        - name: app-code
+          mountPath: /var/www/html 
+        livenessProbe:
+          httpGet:
+            path: / 
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 3
