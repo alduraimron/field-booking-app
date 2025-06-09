@@ -1,211 +1,330 @@
-import React, { useEffect, useState } from 'react'
-import Navbar from '../components/Navbar'
-import Lapangan from '../components/Lapangan'
-import GarisLapangan from '../components/GarisLapangan'
-import TombolHari from '../components/TombolHari'
+import React, { useEffect, useState } from 'react';
+import Navbar from '../components/Navbar';
+import Lapangan from '../components/Lapangan';
+import GarisLapangan from '../components/GarisLapangan';
+import TombolHari from '../components/TombolHari';
 import axios from 'axios';
+import { useParams } from 'react-router-dom';
+import Footer from '../components/Footer';
+import  {privateApi} from '../api/axiosConfig';
+
+// Komponen Modal/Popup baru
+const PaymentModal = ({ onClose, onCloseBayar, description }) => {
+  return (
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={onClose} // Menutup saat klik di luar konten
+    >
+      <div 
+        className="bg-white rounded-lg p-6 sm:p-8 max-w-sm sm:max-w-md w-full shadow-lg relative"
+        onClick={(e) => e.stopPropagation()} // Mencegah klik di dalam modal menutupnya
+      >
+        <h2 className="font-sans font-bold text-xl sm:text-2xl mb-4 text-gray-900">
+          Tata Cara Pembayaran
+        </h2>
+        <div className="text-sm sm:text-base text-gray-700 leading-relaxed mb-6">
+          {description ? (
+            <p>{description}</p>
+          ) : (
+            <>
+              <p className="mb-2">1. Lakukan pembayaran via transfer bank ke rekening berikut:</p>
+              <p className="font-mono bg-gray-100 p-2 rounded text-gray-800">Bank Mandiri: 1440023975425 (a.n. Aldura Armanu Shaufa)</p>
+              {/* <p className="mb-2">2. Cantumkan ID booking Anda pada catatan transfer.</p> */}
+              <p className="mb-2">2. Screenshot bukti transfer dan kirimkan ke WhatsApp admin.</p>
+              <p className="mb-2">3. Booking Anda akan dikonfirmasi setelah pembayaran diverifikasi.</p>
+            </>
+          )}
+        </div>
+        <button
+          onClick={onCloseBayar}
+          className="w-full bg-green-600 rounded-lg hover:bg-green-700 active:bg-green-800 text-white font-bold text-sm sm:text-base py-2.5 px-4 transition-colors duration-200"
+        >
+          Bayar
+        </button>
+      </div>
+    </div>
+  );
+};
+
 
 function getSevenDaysDetails(dateInput = new Date()) {
-    const startDate = new Date(dateInput);
-    startDate.setHours(0, 0, 0, 0); // Reset waktu ke 00:00:00:000
+  const startDate = new Date(dateInput);
+  startDate.setHours(0, 0, 0, 0); // Reset waktu ke 00:00:00:000
 
-    const weekDetails = [];
-    const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    const monthNames = [
-        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-    ];
+  const weekDetails = [];
+  const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const monthNames = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
 
-    // Loop untuk 7 hari ke depan, dimulai dari startDate
-    for (let i = 0; i < 7; i++) {
-        const currentDay = new Date(startDate); // Buat salinan dari startDate
-        currentDay.setDate(startDate.getDate() + i); // Tambahkan 'i' hari dari startDate
+  for (let i = 0; i < 7; i++) {
+    const currentDay = new Date(startDate);
+    currentDay.setDate(startDate.getDate() + i);
 
-        weekDetails.push({
-            hari: dayNames[currentDay.getDay()], // Nama hari
-            tanggal: currentDay.getDate().toString(), // Tanggal numerik
-            bulan: monthNames[currentDay.getMonth()] // Nama bulan
-        });
-    }
-
-    return weekDetails;
+    weekDetails.push({
+      dateObject: currentDay,
+      hari: dayNames[currentDay.getDay()],
+      tanggal: currentDay.getDate().toString(),
+      bulan: monthNames[currentDay.getMonth()]
+    });
+  }
+  return weekDetails;
 }
 
 function Home() {
-  const [lapangan, setLapangan] = useState()
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const { id } = useParams();
+
+  const [lapangan, setLapangan] = useState(null);
+  const [list_lapangan, setListLapangan] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date()); 
+  
+  // State baru untuk popup
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  // Optional: Anda bisa menyimpan deskripsi pembayaran di sini jika setiap lapangan memiliki deskripsi berbeda
+  const [paymentDescription, setPaymentDescription] = useState(null);
+
+  // Effect untuk mengambil detail lapangan utama
   useEffect(() => {
-    axios.get('http://192.168.216.103:8000/api/fields/1')
+    axios.get(`${BASE_URL}/api/fields/${id}`)
       .then(response => {
         setLapangan(response.data.data[0]);
-        console.log(response.data.data[0])
+        // Set deskripsi pembayaran dari lapangan utama jika ada
+        // Asumsi ada properti 'payment_rules' atau 'payment_description' di data lapangan
+        if (response.data.data[0] && response.data.data[0].payment_rules) {
+            setPaymentDescription(response.data.data[0].payment_rules);
+        } else {
+            setPaymentDescription(null); // Jika tidak ada, pakai default di modal
+        }
       })
-      .catch(error => {
-        console.error('Error fetching data:', error);
+      .catch(err => {
+        console.error('Error fetching field data:', err);
+        setError('Failed to load field data.');
       });
-  }, []);
+  }, [BASE_URL, id]);
+
+  // Effect untuk mengambil daftar lapangan (courts)
+  useEffect(() => {
+    axios.get(`${BASE_URL}/api/fields/${id}/courts`)
+      .then(response => {
+        const rawData = response.data.data;
+        const processedData = rawData.flat().map(item => ({
+          ...item,
+          visible: false
+        }));
+        setListLapangan(processedData);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error fetching courts data:', err);
+        setError('Failed to load courts data.');
+        setLoading(false);
+      });
+  }, [BASE_URL, id, showPaymentModal]);
 
   const toggleVisibility = (idToToggle) => {
-    console.log(`Attempting to toggle ID: ${idToToggle}`); // Debugging
-    setLapangan(prevListLapangan => { // Gunakan functional update untuk keandalan
-      const updatedList = prevListLapangan.map(lapangan => {
-        if (lapangan.id === idToToggle) {
-          console.log(`Toggling visible for ID ${idToToggle} from ${lapangan.visible} to ${!lapangan.visible}`); // Debugging
-          return { ...lapangan, visible: !lapangan.visible }; // Buat objek baru
+    setListLapangan(prevListLapangan => {
+      if (!Array.isArray(prevListLapangan)) {
+        console.warn("prevListLapangan is not an array, cannot toggle visibility.");
+        return prevListLapangan;
+      }
+      return prevListLapangan.map(lapanganItem => {
+        if (lapanganItem.id === idToToggle) {
+          return { ...lapanganItem, visible: !lapanganItem.visible };
         }
-        return lapangan; // Kembalikan objek asli jika tidak diubah
+        return lapanganItem;
       });
-      return updatedList; // Kembalikan array baru
     });
   };
 
-  const list_tanggal = getSevenDaysDetails()
+  const handleDateSelect = (dateObject) => {
+    setSelectedDate(dateObject);
+    setListLapangan(prevList => prevList.map(item => ({ ...item, visible: false })));
+  };
+
+  // Fungsi untuk menampilkan popup pembayaran
+  const handleShowPaymentModal = () => {
+    setShowPaymentModal(true);
+  };
+
+  // Fungsi untuk menutup popup pembayaran
+  const handleClosePaymentModal = () => {
+    setShowPaymentModal(false);
+  };
+
+  // Fungsi untuk menutup popup pembayaran dan membayar
+  const handleClosePaymentModalBayar = () => {
+    setShowPaymentModal(false);
+    
+  };
+
+  // Pastikan selectedDate disetel ke waktu awal hari ini untuk perbandingan yang akurat
+  useEffect(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    setSelectedDate(today);
+  }, []);
+
+  const list_tanggal = getSevenDaysDetails();
+
+  if (loading) {
+    return <div className="text-center p-8">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center p-8 text-red-600">{error}</div>;
+  }
 
   return (
-    <div className='bg-white'>
+    <div className='bg-white min-h-screen'>
       <Navbar />
-      <div className='max-w-7xl md:max-w-5xl mx-auto px-0 mt-5 pt-25'>
-        <div className='flex flex-wrap p-0'>
-          <div className='w-full'>
-            <img
-              className="rounded-xl h-[500px] object-cover object-center w-full mb-2"
-              src="https://cdn.pixabay.com/photo/2020/07/31/02/45/field-5451797_960_720.jpg"
-              alt="Gambar Lapangan" />
-          </div>
+      <div className='mx-auto px-4 mt-5 sm:px-6 md:pt-20 max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-5xl xl:max-w-7xl'>
 
-          <div className='mt-10 grid grid-cols-3 gap-4 w-full px-3'>
-            <div className='col-span-2 w-full my-5'>
-              <h1 className='font-sans font-bold text-left text-3xl'>
-                {lapangan && (lapangan.name)}
-              </h1>
-              <h5 className='mt-5 font-sans'>
-                Malang, Jawa Timur
-              </h5>
-              <hr className="my-5 h-0.5 border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-500 to-transparent opacity-50 dark:via-neutral-400" />
-              <h3 className='font-sans font-bold text-left text-xl'>
-                Deskripsi
-              </h3>
-                {lapangan && lapangan.description}
-              <h3 className='font-sans font-bold text-left text-xl mt-5'>
-                Aturan
-              </h3>
-              <ul className='list-disc list-inside'>
-                {lapangan.rules.map((rule) => {
-                  return (
-                    <li>{rule}</li>
-                  )
-                })}
-              </ul>
-              <hr className="my-5 h-0.5 border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-500 to-transparent opacity-50 dark:via-neutral-400" />
-              {/* <h3 className='font-sans font-bold text-left text-xl'>
-                Fasilitas
-              </h3>
-              <div>
-                <ul className='list-disc list-inside'>
-                  <li>Lapangan</li>
-                  <li>Kamar mandi</li>
-                  <li>Kelas abangku</li>
-                </ul>
-              </div> */}
-            </div>
-            <div>
-              <div className='rounded-xl outline-hidden shadow-md p-3 h-fit'>
-                <div className='flex-col'>
-                  <div className='flex p-0'>
-                    <div className='shrink w-fit'>
-                      <h3 className='font-bold text-2xl mb-3'>
-                        Rp 50.000 
-                      </h3>
-                    </div>
-                    <div className='grow w-auto'>
-                      <h5 className='pl-2 pt-2 text-gray-700'>
-                        per sesi
-                      </h5>
-                    </div>
-                  </div>
-                  <div className='py-1.5 grow w-full'>
-                    <a 
-                      className='flex justify-center w-full  bg-red-800 rounded-[12px] hover:bg-red-900 active:bg-red-950 text-white font-bold text-[15px] py-2'
-                      href='/#pilih-lapangan'>
-                      BOOK
-                    </a>
-                  </div>
-                </div>
+        <div className='w-full mb-4'>
+          <img
+            className="rounded-lg w-full h-48 sm:h-64 md:h-80 lg:h-[500px] object-cover object-center"
+            src={
+              lapangan && (`https://drive.google.com/thumbnail?id=${lapangan.image_path}&sz=w1000`)
+            }
+            alt="Gambar Lapangan"
+          />
+        </div>
+
+        <div className='w-full'>
+          <div className='flex flex-col lg:grid lg:grid-cols-3 lg:gap-6'>
+
+            <div className='w-full lg:col-span-2 mb-6 lg:mb-0'>
+
+              <div className='mb-6'>
+                <h1 className='font-sans font-bold text-xl sm:text-2xl lg:text-3xl text-left mb-3'>
+                  {lapangan?.name}
+                </h1>
+                <h5 className='font-sans text-sm sm:text-base text-gray-600'>
+                  {lapangan?.address}
+                </h5>
               </div>
 
-              <div className='mt-5 rounded-xl outline-hidden shadow-md p-3 h-fit'>
-                <h3 className='font-sans font-bold text-left text-xl'>
-                Fasilitas
+              <hr className="mb-6 h-0.5 border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-500 to-transparent opacity-50" />
+
+              <div className='mb-6'>
+                <h3 className='font-sans font-bold text-lg sm:text-xl mb-3'>
+                  Deskripsi
                 </h3>
-                <ul className='list-disc list-inside'>
-                  {lapangan && (
-                    lapangan.facilities.map((facility) => {
-                      return (
-                        <li>{facility}</li>
-                      )
-                    })
+                <p className='text-sm sm:text-base text-gray-700 leading-relaxed'>
+                  {lapangan?.description}
+                </p>
+              </div>
+
+              <div className='mb-6'>
+                <h3 className='font-sans font-bold text-lg sm:text-xl mb-3'>
+                  Aturan
+                </h3>
+                <ul className='list-disc list-inside space-y-1 text-sm sm:text-base text-gray-700'>
+                  {lapangan?.rules && lapangan.rules.map((rule, index) => (
+                    <li key={index}>{rule}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <hr className="mb-6 h-0.5 border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-500 to-transparent opacity-50" />
+            </div>
+
+            <div className='w-full space-y-4'>
+
+              <div className='rounded-lg shadow-md border border-gray-100 p-4 bg-white'>
+                <div className='flex items-center justify-between mb-4'>
+                  <div className='flex items-baseline'>
+                    <h3 className='font-bold text-xl sm:text-2xl text-gray-900'>
+                      Rp 100.000
+                    </h3>
+                    <span className='ml-2 text-sm text-gray-600'>
+                      per sesi
+                    </span>
+                  </div>
+                </div>
+
+                {/* Tombol BOOK, sekarang memanggil handleShowPaymentModal */}
+                <button
+                  type='button'
+                  onClick={handleShowPaymentModal}
+                  className='block w-full text-center bg-green-600 rounded-lg hover:bg-green-700 active:bg-green-800 text-white font-bold text-sm sm:text-base py-3 px-4 transition-colors duration-200'
+                >
+                  BOOK
+                </button>
+              </div>
+
+              <div className='rounded-lg shadow-md border border-gray-100 p-4 bg-white'>
+                <h3 className='font-sans font-bold text-lg sm:text-xl mb-3'>
+                  Fasilitas
+                </h3>
+                <ul className='list-disc list-inside space-y-1 text-sm sm:text-base text-gray-700'>
+                  {lapangan?.facilities && (
+                    lapangan.facilities.map((facility, index) => (
+                      <li key={index}>{facility}</li>
+                    ))
                   )}
                 </ul>
               </div>
             </div>
           </div>
         </div>
-        <div className='w-full'>
-          <h1 className='mt-5 font-sans font-bold text-left text-3xl' id='pilih-lapangan'>
+
+        <div className='w-full mt-8'>
+          <h1 className='font-sans font-bold text-xl sm:text-2xl lg:text-3xl mb-6' id='pilih-lapangan'>
             Pilih Lapangan
           </h1>
-        </div>
-        <div className='flex gap-4 justify-center mt-5 rounded-xl outline-hidden shadow-md p-3 h-fit w-fit justify-self-center'>
-          {/* <div className='min-w-15 h-15'>
-            <a href="">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-full h-full p-3">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-              </svg>
-            </a>
-          </div> */}
-          {list_tanggal.map(tanggal => {
-            return(
-              <div>
-                <TombolHari hari={tanggal.hari} tanggal={tanggal.tanggal+" "+tanggal.bulan}/>
-              </div>
-            )
-          })}
-          {/* <TombolHari hari="Minggu" tanggal="04 Mei"/>
-          <TombolHari hari="Senin" tanggal="05 Mei"/>
-          <TombolHari hari="Selasa" tanggal="06 Mei"/>
-          <TombolHari hari="Rabu" tanggal="07 Mei"/>
-          <TombolHari hari="Kamis" tanggal="08 Mei"/>
-          <TombolHari hari="Jum'at" tanggal="09 Mei"/>
-          <TombolHari hari="Sabtu" tanggal="10 Mei"/> */}
-          {/* <div className='w-15 h-15'>
-            <a href="">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-full h-full p-3">
-                <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-              </svg>
-            </a>
-          </div> */}
-        </div>
-        <div>
-          {/* {lapangan.map(item => {
-            return (
+
+          <div className='w-full mb-6'>
+            <div className='flex md:justify-center items-center gap-2 sm:gap-4 p-3 sm:p-4 rounded-lg shadow-md border border-gray-100 bg-white overflow-x-auto scrollbar-hide'>
+              {list_tanggal.map((tanggal, index) => (
+                <div key={index} className='flex-shrink-0'>
+                  <TombolHari
+                    hari={tanggal.hari}
+                    tanggal={tanggal.tanggal + " " + tanggal.bulan}
+                    dateObject={tanggal.dateObject}
+                    isSelected={
+                      selectedDate.toDateString() === tanggal.dateObject.toDateString()
+                    }
+                    onSelect={handleDateSelect}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className='w-full'>
+            {list_lapangan.map(item => (
               <div key={item.id}>
-                <Lapangan id={item.id} // Teruskan ID
-                  deskripsi={item.deskripsi}
+                <Lapangan
+                  id={item.id}
+                  name={item.name}
+                  deskripsi={item.description}
                   visible={item.visible}
-                  onToggleVisibility={toggleVisibility}/>
-                <GarisLapangan/>
+                  onToggleVisibility={toggleVisibility}
+                  selectedDate={selectedDate}
+                  onBookClick={handleShowPaymentModal} // Meneruskan fungsi ke Lapangan
+                />
+                <GarisLapangan />
               </div>
-            );
-          })} */}
-          {/* <Lapangan/>
-          <GarisLapangan/>
-          <Lapangan/>
-          <GarisLapangan/>
-          <Lapangan/>
-          <GarisLapangan/> */}
+            ))}
+          </div>
         </div>
       </div>
+      <Footer />
+
+      {/* Render PaymentModal jika showPaymentModal true */}
+      {showPaymentModal && (
+        <PaymentModal 
+          onClose={handleClosePaymentModal} 
+          onCloseBayar={handleClosePaymentModalBayar}
+          description={paymentDescription} // Kirim deskripsi yang didapat dari API
+        />
+      )}
     </div>
-  )
+  );
 }
 
-export default Home
+export default Home;

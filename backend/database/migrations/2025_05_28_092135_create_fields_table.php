@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('address');
             $table->json('rules');
             $table->json('facilities');
+            $table->string('image_path');
         });
     }
 

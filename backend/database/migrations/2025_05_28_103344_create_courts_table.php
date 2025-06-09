@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('field_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->text('description');
+            $table->string('image_id');
         });
     }
 

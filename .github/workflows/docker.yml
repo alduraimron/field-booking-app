@@ -1,4 +1,4 @@
-name: Deploy Laravel + React App
+name: Deploy to docker hub for devsecops
 
 on:
   push:
@@ -26,19 +26,22 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
+          file: ./frontend/devsecops/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/my-frontend:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/frontend-seport:latest
 
       - name: Build and Push Backend
         uses: docker/build-push-action@v5
         with:
           context: ./backend
+          file: ./backend/devsecops/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/my-backend:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/backend-seport:latest
 
       - name: Build and Push Nginx
         uses: docker/build-push-action@v5 
         with:
-          context: ./backend/nginx 
+          context: ./backend
+          file: ./backend/devsecops/nginx/Dockerfile
           push: true 
-          tags: ${{ secrets.DOCKER_USERNAME }}/my-nginx:latest 
+          tags: ${{ secrets.DOCKER_USERNAME }}/nginx-seport:latest 
