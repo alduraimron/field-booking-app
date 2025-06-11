@@ -34,3 +34,12 @@ Route::post('/bookings', [BookingController::class, 'store'])->middleware('auth:
 Route::get('/up', function () {
     return response()->json(['status' => 'API is up!']);
 });
+
+// routes/api.php
+Route::get('/info', function () {
+    return response()->json([
+        'message' => 'Hello from Laravel API!',
+        'instance_hostname' => gethostname(), // Hostname EC2 instance
+        'container_id' => getenv('HOSTNAME') // Hostname/ID kontainer (jika di Docker)
+    ]);
+});
