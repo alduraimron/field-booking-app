@@ -23,11 +23,14 @@ class AuthController extends Controller
 
         $user = User::where('email', $validated['email'])->first();
 
-        $token = $user->createToken('Token of' . $user->name)->plainTextToken;
+        $user->tokens()->delete();
+        $abilities = $user->getAbilitiesForToken();
+
+        $token = $user->createToken('Token of' . $user->name, $abilities)->plainTextToken;
         return $this->success([
             'user' => $user,
             'token' => $token
-        ]);
+        ], "Success");
     }
     public function register(StoreUserRequest $request)
     {
@@ -49,6 +52,7 @@ class AuthController extends Controller
 
     public function logout()
     {
+
         return response()->json('This is my logouit method');
     }
 }

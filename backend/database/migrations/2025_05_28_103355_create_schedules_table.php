@@ -19,7 +19,7 @@ return new class extends Migration
             $table->time('start_time');
             $table->time('end_time');
             $table->integer('price');
-            $table->boolean('available');
+            $table->boolean('available')->default(true);
         });
     }
 

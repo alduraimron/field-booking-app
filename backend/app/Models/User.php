@@ -14,6 +14,17 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasApiTokens;
 
+    public function getAbilitiesForToken(): array
+    {
+        switch($this->role){
+            case 'admin':
+                return [
+                    'admin:access-dashboard'
+                ];
+            default:
+                return [];
+        }
+    }
     /**
      * The attributes that are mass assignable.
      *
@@ -23,6 +34,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
