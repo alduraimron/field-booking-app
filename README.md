@@ -24,28 +24,6 @@ Application for reserving sport fields. User can see schedule of fields and book
 
 ### Installation
 
-**Front-end**
-
-1. Clone this github repository :
-```bash
-git clone https://github.com/alduraimron/field-booking-app.git
-cd field-booking-app/frontend
-```
-2. Provide all environtment variables in `.env` with :
-```bash
-# your backend URL 
-VITE_API_BASE_URL=
-# example = http://192.168.1.14:8000
-```
-3. Download the packages:
-```bash
-npm install
-```
-4. Run the app:
-```bash
-npm run dev
-```
-
 **Back-end**
 
 1. Make sure you have database MySql
@@ -74,4 +52,26 @@ php artisan migrate
 6. Run the app:
 ```bash
 composer run dev
+```
+
+**Front-end**
+
+1. Clone this github repository :
+```bash
+git clone https://github.com/alduraimron/field-booking-app.git
+cd field-booking-app/frontend
+```
+2. Provide all environtment variables in `.env` with :
+```bash
+# your backend URL 
+VITE_API_BASE_URL=
+# example = http://192.168.1.14:8000
+```
+3. Download the packages:
+```bash
+npm install
+```
+4. Run the app:
+```bash
+npm run dev
 ```
